@@ -1,5 +1,5 @@
 """An OpenAI Gym Super Mario Bros. environment that randomly selects levels."""
-import gym
+import gymnasium as gym
 import numpy as np
 from .smb_env import SuperMarioBrosEnv
 
@@ -95,7 +95,8 @@ class SuperMarioBrosRandomStagesEnv(gym.Env):
 
         """
         # Seed the RNG for this environment.
-        self.seed(seed)
+        # self.seed(seed)
+        super().reset(seed=seed)
         # Get the collection of stages to sample from
         stages = self.stages
         if options is not None and 'stages' in options:

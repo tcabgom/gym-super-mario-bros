@@ -31,7 +31,7 @@ class SuperMarioBrosEnv(NESEnv):
     # the legal range of rewards for each step
     reward_range = (-15, 15)
 
-    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None):
+    def __init__(self, rom_mode='vanilla', lost_levels=False, target=None, render_mode=None):
         """
         Initialize a new Super Mario Bros environment.
 
@@ -49,7 +49,7 @@ class SuperMarioBrosEnv(NESEnv):
         # decode the ROM path based on mode and lost levels flag
         rom = rom_path(lost_levels, rom_mode)
         # initialize the super object with the ROM path
-        super(SuperMarioBrosEnv, self).__init__(rom)
+        super(SuperMarioBrosEnv, self).__init__(rom, render_mode=render_mode)
         # set the target world, stage, and area variables
         target = decode_target(target, lost_levels)
         self._target_world, self._target_stage, self._target_area = target
@@ -119,7 +119,7 @@ class SuperMarioBrosEnv(NESEnv):
         return self._read_mem_range(0x07de, 6)
 
     @property
-    def _time(self):
+    def _time(self): # TO-DO
         """Return the time left (0 to 999)."""
         # time is represented as a figure with 3 10's places
         return self._read_mem_range(0x07f8, 3)
@@ -366,19 +366,20 @@ class SuperMarioBrosEnv(NESEnv):
         self._time_last = self._time
         self._x_position_last = self._x_position
 
-    def _did_step(self, done):
+    def _did_step(self, terminated, truncated):
         """
         Handle any RAM hacking after a step occurs.
 
         Args:
-            done: whether the done flag is set to true
+            terminated (bool): whether the terminated flag is set to true
+            truncated (bool): whether the truncated flag is set to true
 
         Returns:
             None
 
         """
         # if done flag is set a reset is incoming anyway, ignore any hacking
-        if done:
+        if terminated or truncated:
             return
         # if mario is dying, then cut to the chase and kill hi,
         if self._is_dying:
@@ -392,15 +393,23 @@ class SuperMarioBrosEnv(NESEnv):
         # how many lives the player has left
         self._skip_occupied_states()
 
-    def _get_reward(self):
+    def _get_reward(self):  # TO-DO
         """Return the reward after a step occurs."""
         return self._x_reward + self._time_penalty + self._death_penalty
 
-    def _get_done(self):
+    def _get_done(self):  # TO-DO remove
         """Return True if the episode is over, False otherwise."""
         if self.is_single_stage_env:
             return self._is_dying or self._is_dead or self._flag_get
         return self._is_game_over
+
+    def _get_terminated(self):
+        """Return True if the episode is over, False otherwise."""
+        return self._get_done()
+
+    def _get_truncated(self):  # TO-DO implement. Timeout.
+        """Return True if truncated """
+        return False
 
     def _get_info(self):
         """Return the info after a step occurs"""
